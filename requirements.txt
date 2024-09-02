@@ -4,4 +4,4 @@ numpy>=1.21.6
 matplotlib==3.5.3
 scikit-learn==1.0.2
 distlib==0.3.8
-scipy==1.7.3
+scipy>=1.9.0
