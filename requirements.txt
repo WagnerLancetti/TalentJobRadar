@@ -7,4 +7,4 @@ matplotlib==3.5.3
 scikit-learn>=1.2.0
 distlib==0.3.8
 scipy>=1.9.0
-pillow
+pillow>=9.5.0
