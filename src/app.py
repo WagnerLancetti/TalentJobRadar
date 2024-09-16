@@ -158,7 +158,7 @@ def run():
     footer = f'''
     <div class="footer">
         <img src="data:image/png;base64,{logo_base64}" alt="Logo">
-        <p>© 2024 TalentJobRadar</p>
+        <p>© 2024</p>
     </div>
     '''
 
