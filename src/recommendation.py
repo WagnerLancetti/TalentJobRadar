@@ -99,32 +99,23 @@ def plot_radar_chart(senioridade_contagem, skill_name, cor, map_translate):
     return fig
 
 def RecomenderJob(df, vector, similarity_matrix, map_positions, uniques, selected_levels, selected_types):
-    binary_vector = map_vector(vector, map_positions, len(uniques))  # Vetor que será recebido da aplicação
+    binary_vector = map_vector(vector, map_positions, len(uniques))  
+    similarities = np.array([jaccard_similarity(binary_vector, row) for row in similarity_matrix])
+    similarities = np.nan_to_num(similarities, nan=0)  # Substituir NaN por 0 para evitar problemas
 
-    similarities = []
-    for row in similarity_matrix:
-        similarity = jaccard_similarity(binary_vector, row)
-        similarities.append(similarity)
+    index = np.argsort(similarities)[::-1]  
+    sorted_indices = index[:len(similarities)]  # Retorna todos os índices, já ordenados
 
-    similarities = np.array(similarities)
-    index = np.argsort(similarities)[::-1]  # Índices ordenados por similaridade decrescente
-
-    sorted_indices = index[~np.isnan(similarities[index])]
     indices = []
-    for i, idx in enumerate(sorted_indices):
-        if i >= 10:
+    for idx in sorted_indices:
+        if len(indices) >= 10:
             break
-        
-        # Nível de senioridade e o tipo de trabalho estão nos filtros selecionados
         seniority_match = (df.iloc[idx]['seniority'] in selected_levels) or not selected_levels
         remote_match = (df.iloc[idx]['remote'] in selected_types) or not selected_types
-        
-        # Ambos os filtros aceitos
         if seniority_match and remote_match:
             indices.append(idx)
 
-    
-    selected_rows = df.loc[indices]
+    selected_rows = df.iloc[indices]
     similarity_rank = similarities[indices]
 
     return selected_rows, similarity_rank
@@ -135,11 +126,12 @@ def RecomenderSkill(df, vector, uniques, map_positions, binary_vectors, percentu
     similaridades = []
     # Binary_vectors = vetores binários dos clusters
     for elem in binary_vectors.values():
-        similaridades.append(jaccard_similarity(elem, binary_vector))
-
+        similaridade = jaccard_similarity(elem, binary_vector)
+        similaridades.append(similaridade)
+        
     ranking_indices = np.argsort(similaridades)[::-1]
-
-    cluster_ranking = [list(binary_vectors.keys())[i] for i in ranking_indices]
+    cluster_ranking = [list(binary_vectors)[i] for i in ranking_indices]
+    habilidades_recomendadas = {}  # Dicionário para armazenar habilidades recomendadas
 
     for cluster_id in cluster_ranking:
         resultado_cluster = percentuais_clusters[cluster_id]
@@ -149,15 +141,23 @@ def RecomenderSkill(df, vector, uniques, map_positions, binary_vectors, percentu
         # Ordenar habilidades por relevância
         habilidades_ordenadas = dict(sorted(habilidades_filtradas.items(), key=lambda item: item[1], reverse=True))
 
-        # Verificar se há pelo menos 3 habilidades recomendadas
-        if len(habilidades_ordenadas) >= 3:
-            rank_skills = ranking_skills(percentuais_clusters)
-            rank_filtrado = {k: v for k, v in rank_skills if k not in vector}
-            valores_percentuais = [v for k, v in habilidades_ordenadas.items()]
+        # Armazenar as habilidades recomendadas, mesmo que menos de 3
+        habilidades_recomendadas.update(habilidades_ordenadas)
 
-            figs = RelacaoSenioridade(df, vector, habilidades_ordenadas, map_translate, selected_levels, selected_types)
+        # Se já tiver pelo menos 2 habilidades, pode parar
+        if len(habilidades_recomendadas) >= 3:
+            break
+    
+    # Se houver pelo menos 1 habilidade recomendada, continuar o processo
+    if habilidades_recomendadas:
+        habilidades_ordenadas = dict(sorted(habilidades_recomendadas.items(), key=lambda item: item[1], reverse=True))
+        rank_skills = ranking_skills(percentuais_clusters)
+        rank_filtrado = {k: v for k, v in rank_skills if k not in vector}
+        valores_percentuais = [v for k, v in habilidades_ordenadas.items()]
 
-            return habilidades_ordenadas, rank_filtrado, valores_percentuais, figs
+        figs = RelacaoSenioridade(df, vector, habilidades_ordenadas, map_translate, selected_levels, selected_types)
 
-    # Se nenhum cluster tiver pelo menos 3 habilidades recomendadas, retornar vazio
-    return {}, {}, [], []
+        return habilidades_ordenadas, rank_filtrado, valores_percentuais, figs
+
+    # Se o número de habilidades recomendadas for menor que 3, retorna as disponíveis
+    return habilidades_recomendadas, {}, [], []

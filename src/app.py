@@ -122,8 +122,7 @@ def run():
             habilidades_selecionadas = [skill for skill in uniques if map_translate.get(skill, skill) in habilidades_selecionadas]
             selected_types = [type_translation_dict[opcao] for opcao, selecionado in opcoes.items() if selecionado]
             clusters_filter, percentuais_filter = create_clusters(selected_levels,selected_types)
-            uniques_filter, map_positions_filter, binary_vectors_filter = create_uniques(clusters)
-            
+            uniques_filter, map_positions_filter, binary_vectors_filter = create_uniques(clusters_filter)
             habilidades_result, rank_skills, valores_percentuais, figs = RecomenderSkill(df, habilidades_selecionadas, uniques_filter, map_positions_filter, binary_vectors_filter, percentuais_filter, map_translate, selected_levels, selected_types)
             if habilidades_result != {} and rank_skills != {}:
                 habilidades_show = []

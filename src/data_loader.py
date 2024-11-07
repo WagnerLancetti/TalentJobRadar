@@ -23,14 +23,8 @@ def load_data(db_path):
         'Self disciplined': 'Auto-disciplina', 'Self management': 'Autogestão', 'Self motivated': 'Auto-motivado', 'Team': 'Trabalho em equipe'
     }
 
-
-
-    uniques = []
-    for cluster_id, skills in clusters.items():
-        for elem in skills:
-            uniques.append(elem)
-    uniques.append('Not mention')
-    uniques = sorted(uniques)
+    uniques = sorted(set(skill for skills in clusters.values() for skill in skills) | {'Not mention'})
+    
     map_positions = {item: idx for idx, item in enumerate(uniques)}
     vector_size = len(uniques)
     binary_vectors = {cluster: create_binary_vector(skills, map_positions, vector_size) for cluster, skills in clusters.items()}

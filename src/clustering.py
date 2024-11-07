@@ -16,6 +16,7 @@ def import_similarity_matrix(): # Extração da matrix
     with zipfile.ZipFile(db_path+"matrix_similarity.zip", 'r') as zipf:
         zipf.extractall()
     recovered_matrix_similarity = np.loadtxt('matrix_similarity.csv', delimiter=',')
+    recovered_matrix_similarity = np.round(recovered_matrix_similarity).astype(int)
     return recovered_matrix_similarity
 
 def create_binary_vector(skills, map_positions, vector_size):
